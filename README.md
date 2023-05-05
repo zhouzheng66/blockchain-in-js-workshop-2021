@@ -2,15 +2,16 @@
 
 ## 小组成员
 
-- 2021xxxx-姓名 （组长）
-- 2021xxxx-姓名
-- 2021xxxx-姓名
-- 2021xxxx-姓名
+- 2021131037-周正 （组长）
+- 2021131047-李宁
+- 2021131002-黄文迪
+- 2021131045-叶瑶瑶
+- 2021131034-贾伟泽
+- 2021131033-康智豪
 
 
 ## 代码仓库链接
 
-https://github.com/caosbad/blockchain-in-js-workshop-2021(示例用，请根据自身的仓库替换)
 
 
 
@@ -26,7 +27,7 @@ https://github.com/CUITBlockchain/blockchain-in-js-workshop-2021/commit/25f3a0d8
 
 > 将截图上传至网盘，放入链接即可
 
-![](链接)
+![https://postimg.cc/gallery/D44zddK](链接)
 
 
 ### 主观与讨论题内容
