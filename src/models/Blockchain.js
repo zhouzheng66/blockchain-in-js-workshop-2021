@@ -23,7 +23,7 @@ class Blockchain {
             let currentBlock = this.blocks[hash]
             let chain = [currentBlock] //初始化这个临时数组，里面有个节点是当前节点
 
-            while (currentBlock.previousHash != "root" && currentBlock.hash != "root") { //判断当前区块如果不是创世区块，就将前一个块放入临时链
+            while (currentBlock.index != 1) { //判断当前区块如果不是创世区块，就将前一个块放入临时链
                 currentBlock = currentBlock.getPreviousBlock(); //将当前块指针前移
                 chain.unshift(currentBlock) //将前移过后的当前区块加入到临时链中
             }
