@@ -24,7 +24,8 @@ class Block {
         //     str = str + "0"
         // }
         var str = "0".repeat(DIFFICULTY)
-        return (this.nonce + "").startsWith(str)
+        this._setHash()
+        return this.hash.startsWith(str)
     }
 
     setNonce(nonce) {
@@ -39,6 +40,9 @@ class Block {
             return this.blockchain.genesis
         }
         return this.blockchain.blocks[this.previousHash]
+    }
+    _setHash() {
+        this.hash = sha256(this.nonce + this.previousHash + this.height + this.blockchain).toString()
     }
 
 }
