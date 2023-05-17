@@ -13,8 +13,10 @@ class Block {
         this.previousHash = previousHash
         this.height = index
         this.hash = hash
+            // 矿工
         this.coinbaseBeneficiary = miner
-        this.utxopool = new UTXOPool
+            //创建交易池
+        this.utxoPool = new UTXOPool({})
     }
     isValid() {
         // var str = ""
@@ -33,6 +35,9 @@ class Block {
          * @returns 该区块的前一个区块
          */
     getPreviousBlock() {
+        if (this.height == 1) {
+            return this.blockchain.genesis
+        }
         return this.blockchain.blocks[this.previousHash]
     }
 

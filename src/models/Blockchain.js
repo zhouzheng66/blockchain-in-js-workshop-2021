@@ -1,4 +1,5 @@
-import UTXOPool from './UTXOPool.js'
+import './UTXOPool.js'
+import UTXO from "./UTXO.js"
 
 // Blockchain
 class Blockchain {
@@ -47,6 +48,14 @@ class Blockchain {
     // 获得区块高度最高的区块
     maxHeightBlock() {
         // return Block
+        var heightestBlock = this.blocks.element(0)
+        for (let hash in this.blocks) {
+            currentBlock = blocks[hash]
+            if (currentBlock.height > heightestBlock.height) {
+                heightestBlock = currentBlock
+            }
+        }
+        return heightestBlock
     }
 
     // 添加区块
@@ -56,8 +65,20 @@ class Blockchain {
     _addBlock(block) {
         if (!block.isValid()) return
         if (this.containsBlock(block)) return
+            //先间新的区块加入到映射中
         this.blocks[block.hash] = block
             // 添加 UTXO 快照与更新的相关逻辑
+
+        // 复制前一个区块的交易池
+        var prepoolutxos = block.getPreviousBlock().utxoPool.clone()
+            // 添加创币交易
+        block.utxoPool.utxos = prepoolutxos
+        let coinbaseUTXO = new UTXO(block.coinbaseBeneficiary, 12.5)
+            // 在新区块的交易池中添加这个交易
+            // prepool.addUTXO(coinbaseUTXO)
+        block.utxoPool.addUTXO(coinbaseUTXO)
+
+
 
     }
 }
