@@ -16,12 +16,8 @@ class UTXOPool {
         // 将新的交易添加进UTXO池中并更新余额
 
         if (this.utxos[utxo.pubKey] != null) {
-
-
-
             this.utxos[utxo.pubKey] = { amount: this.utxos[utxo.pubKey].amount + utxo.amount };
         } else {
-
             this.utxos[utxo.pubKey] = { amount: utxo.amount };
         }
     }
