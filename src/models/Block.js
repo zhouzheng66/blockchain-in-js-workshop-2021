@@ -4,6 +4,8 @@ import "./UTXOPool.js"
 import UTXOPool from './UTXOPool.js';
 import "./MerkleTree.js"
 import MerkleTree from './MerkleTree.js';
+import "./Transaction.js"
+import Transaction from './Transaction.js';
 
 export const DIFFICULTY = 2
 
@@ -19,7 +21,7 @@ class Block {
         this.coinbaseBeneficiary = miner
             //创建交易池
         this.utxoPool = new UTXOPool({})
-        this.merkleTree = new MerkleTree([])
+        this.merkleTree = new MerkleTree([new Transaction(0, this.coinbaseBeneficiary, 12.5)])
         this.merkleTreeRoot = this.merkleTree.getRoot()
     }
     isValid() {
@@ -45,10 +47,10 @@ class Block {
             this.hash = sha256(this.nonce + this.previousHash + this.height + this.blockchain + this.coinbaseBeneficiary).toString()
         }
         // 重新构建默克尔树的方法
-    rebulidMerkleTree() {
-        this.merkleTree = new MerkleTree(this.utxoPool)
-        this.merkleTreeRoot = this.merkleTree.getRoot()
-    }
+        // rebulidMerkleTree() {
+        //     this.merkleTree = new MerkleTree(this.utxoPool)
+        //     this.merkleTreeRoot = this.merkleTree.getRoot()
+        // }
 
 }
 

@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import sha256 from 'crypto-js/sha256.js'
 
 class MerkleTree {
     // 构造函数，输入一个data 是一个数组
@@ -8,7 +9,7 @@ class MerkleTree {
         }
         // 计算data的Hash的方法
     hashLeaf(leafData) {
-        return createHash('sha256').update(leafData).digest('hex');
+        return sha256(leafData).toString
     }
 
     buildTree(leaves) {
