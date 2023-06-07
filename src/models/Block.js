@@ -49,7 +49,13 @@ class Block {
 
     addTransaction(trx) {
             this.merkleTree.addNode(trx)
+                // 给这笔交易添加矿工
+            trx._setCharge(this.coinbaseBeneficiary)
+
             this.utxoPool.handleTransaction(trx)
+                // 添加手续费函数
+
+
         }
         // 获取交易hash combinedTransactionsHash
     combinedTransactionsHash() {

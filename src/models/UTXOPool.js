@@ -26,18 +26,20 @@ class UTXOPool {
         }
         // 验证hash的算法
         // 返回一个bool值
-    isValidTransaction(miner, num) {
+    isValidTransaction(tra) {
 
-        return this.utxos[miner].amount > num
+        return this.utxos[tra.miner].amount > (tra.num + tra.fee)
 
     }
 
     // 处理交易的方法
     handleTransaction(tra) {
         // 首先构建一个UTXO
-        if (this.isValidTransaction(tra.miner, tra.num)) {
-            this.addUTXO(new UTXO(tra.receiverPubKey, tra.num))
-            this.utxos[tra.miner] = { amount: this.utxos[tra.miner].amount - tra.num }
+        if (this.isValidTransaction(tra)) {
+            this.addUTXO(new UTXO(tra.receiverPubKey, (tra.num)))
+            this.addUTXO(new UTXO(tra.minner, tra.fee))
+            this.utxos[tra.miner] = { amount: this.utxos[tra.miner].amount - tra.num - tra.fee }
+
         }
     }
 }
