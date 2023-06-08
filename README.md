@@ -108,7 +108,7 @@ https://github.com/CUITBlockchain/blockchain-in-js-workshop-2021/commit/25f3a0d8
 
 > 将截图上传至网盘，放入链接即可
 
-![https://postimg.cc/gallery/D44zddK](链接)
+[![lesson1-1.png](https://i.postimg.cc/8kmbqrL9/lesson1-1.png)](https://postimg.cc/qggnKqbx)
 
 
 ### 主观与讨论题内容
@@ -140,7 +140,21 @@ https://github.com/CUITBlockchain/blockchain-in-js-workshop-2021/commit/25f3a0d8
 
 
 ## 第二课代码
-
+```
+// Block.js中更新nonce的函数
+setNonce(nonce) {
+            this.nonce = nonce
+        }
+isValid() {
+       
+        const str = "0".repeat(DIFFICULTY)
+        this._setHash()
+        return this.hash.startsWith(str)
+    }
+     _setHash() {
+        this.hash = sha256(this.nonce + this.height + this.previousHash).toString()
+    }
+```
 
 ### 代码 commint 地址
 
@@ -150,8 +164,9 @@ https://github.com/CUITBlockchain/blockchain-in-js-workshop-2021/commit/25f3a0d8
 ### 代码截图
 
 > 将截图上传至网盘，放入链接即可
+[![lesson2.png](https://i.postimg.cc/zXRNvGnK/lesson2.png)](https://postimg.cc/BXskws7n)
 
-![](链接)
+![https://postimg.cc/BXskws7n](链接)
 
 
 ### 主观与讨论题内容
@@ -170,10 +185,64 @@ https://github.com/CUITBlockchain/blockchain-in-js-workshop-2021/commit/25f3a0d8
 
 
 ### 代码截图
+```
+// 给每个Block 添加UTXO属性和coinbaseBeneficiary属性
+ constructor(blockchain, previousHash, index, hash, miner) {
+        this.blockchain = blockchain;
+        this.previousHash = previousHash
+        this.height = index
+        this.hash = hash
+            // 矿工
+        this.coinbaseBeneficiary = miner
+            //创建交易池
+        this.utxoPool = new UTXOPool({})
+    }
+```
+``` 
+export default class UTXO {
+    constructor(pubKey, amount) {
+        this.pubKey = pubKey
+        this.amount = amount
+    }
+}
+```
+```
+import UTXO from './UTXO.js'
+
+class UTXOPool {
+    constructor(utxos = {}) {
+
+        this.utxos = utxos
+
+
+    }
+
+    // 添加交易函数
+    /**
+     * 将交易的信息更新至 UTXOPool 中
+     */
+    addUTXO(utxo) {
+        // 将新的交易添加进UTXO池中并更新余额
+
+        if (this.utxos[utxo.pubKey] != null) {
+            this.utxos[utxo.pubKey] = { amount: this.utxos[utxo.pubKey].amount + utxo.amount };
+        } else {
+            this.utxos[utxo.pubKey] = { amount: utxo.amount };
+        }
+    }
+
+    // 将当前 UXTO 的副本克隆
+    clone() {
+        return this.utxos
+    }
+}
+
+export default UTXOPool
+```
 
 > 将截图上传至网盘，放入链接即可
 
-![](链接)
+[![lesson3.png](https://i.postimg.cc/yNZFx9Lc/lesson3.png)](https://postimg.cc/sB3B0Bdg)
 
 
 ### 主观与讨论题内容
@@ -194,10 +263,51 @@ https://github.com/CUITBlockchain/blockchain-in-js-workshop-2021/commit/25f3a0d8
 
 
 ### 代码截图
+```
+import sha256 from 'crypto-js/sha256.js'
+import { min } from 'ramda'
+
+
+class Transaction {
+    constructor(miner, receiverPubKey, num) {
+            this.miner = miner
+            this.receiverPubKey = receiverPubKey
+            this.num = num
+            this._setHash()
+        }
+        // 更新交易 hash
+    _setHash() {
+        this.hash = this._calculateHash();
+    }
+
+    // 计算交易 hash 的摘要函数
+    _calculateHash() {
+        return sha256(this.receiverPubKey + this.num).toString()
+
+    }
+}
+
+export default Transaction
+```
+```
+// UTXOpool中的处理交易方法
+ handleTransaction(tra) {
+        // 首先构建一个UTXO
+        if (this.isValidTransaction(tra.miner, tra.num)) {
+            this.addUTXO(new UTXO(tra.receiverPubKey, tra.num))
+            this.utxos[tra.miner] = { amount: this.utxos[tra.miner].amount - tra.num }
+        }
+    }
+  // 验证交易的方法
+isValidTransaction(miner, num) {
+   console.log(this.utxos)
+   return this.utxos[miner].amount > num
+}
+```
 
 > 将截图上传至网盘，放入链接即可
 
-![](链接)
+[![lesson4.png](https://i.postimg.cc/nrpc8sRv/lesson4.png)](https://postimg.cc/PpVkYqkx)
 
 
 ### 主观与讨论题内容
@@ -218,10 +328,139 @@ https://github.com/CUITBlockchain/blockchain-in-js-workshop-2021/commit/25f3a0d8
 
 
 ### 代码截图
+该部分整合了默克尔树 merkleTree.js
+```
+import { createHash } from 'crypto';
+import sha256 from 'crypto-js/sha256.js'
+
+class MerkleTree {
+    // 构造函数，输入一个data 是一个数组
+    constructor(data) {
+            this.leaves = data.map((leafData) => this.hashLeaf(leafData));
+            this.tree = this.buildTree(this.leaves);
+        }
+        // 计算data的Hash的方法
+    hashLeaf(leafData) {
+        return sha256(leafData).toString
+    }
+
+    buildTree(leaves) {
+            if (leaves.length === 1) {
+                return leaves;
+            }
+
+            const parents = [];
+            for (let i = 0; i < leaves.length; i += 2) {
+                const left = leaves[i];
+                const right = i + 1 < leaves.length ? leaves[i + 1] : '';
+                const parent = this.hashNodes(left, right);
+                parents.push(parent);
+            }
+
+            return this.buildTree(parents);
+        }
+        // 计算左右两个叶子节点的hash值的方法
+    hashNodes(left, right) {
+            return createHash('sha256').update(left + right).digest('hex');
+        }
+        // 返回默克尔树的根
+    getRoot() {
+        return this.tree[0];
+    }
+
+    getProof(index) {
+        const proof = [];
+        let idx = index;
+
+        for (let i = 0; i < this.tree.length - 1; i++) {
+            const siblingIdx = idx % 2 === 0 ? idx + 1 : idx - 1;
+            const sibling = this.tree[siblingIdx];
+            proof.push(sibling);
+
+            idx = Math.floor(idx / 2);
+        }
+
+        return proof;
+    }
+
+    verify(root, data, proof) {
+        let hash = this.hashLeaf(data);
+
+        for (const sibling of proof) {
+            const left = sibling < hash ? sibling : hash;
+            const right = sibling < hash ? hash : sibling;
+            hash = this.hashNodes(left, right);
+        }
+
+        return root === hash;
+    }
+
+    addNode(data) {
+        const leaf = this.hashLeaf(data);
+        this.leaves.push(leaf);
+        this.rebuildTree();
+    }
+
+    removeNode(data) {
+        const leaf = this.hashLeaf(data);
+        const index = this.leaves.indexOf(leaf);
+        if (index > -1) {
+            this.leaves.splice(index, 1);
+            this.rebuildTree();
+        }
+    }
+
+    rebuildTree() {
+        this.tree = this.buildTree(this.leaves);
+    }
+}
+
+export default MerkleTree
+// 示例用法
+// const data = ['a', 'b', 'c', 'd'];
+// const merkleTree = new MerkleTree(data);
+// const root = merkleTree.getRoot();
+// console.log('Merkle Tree Root:', root);
+
+// // 添加节点
+// merkleTree.addNode('e');
+// const newRoot = merkleTree.getRoot();
+// console.log('Updated Merkle Tree Root:', newRoot);
+
+// // 删除节点
+// merkleTree.removeNode('c');
+// const finalRoot = merkleTree.getRoot();
+// console.log('Final Merkle Tree Root:', finalRoot);
+```
+Block.js
+```
+   constructor(blockchain, previousHash, index, hash, miner) {
+        this.blockchain = blockchain;
+        this.previousHash = previousHash
+        this.height = index
+        this.hash = hash
+            // 矿工
+        this.coinbaseBeneficiary = miner
+            //创建交易池
+        this.utxoPool = new UTXOPool({})
+        this.merkleTree = new MerkleTree([new Transaction(0, this.coinbaseBeneficiary, 12.5)])
+            // this.merkleTreeRoot = this.merkleTree.getRoot()
+
+    }
+    // 添加交易的函数
+     addTransaction(trx) {
+            this.merkleTree.addNode(trx)
+            this.utxoPool.handleTransaction(trx)
+        }
+         // 获取交易hash combinedTransactionsHash
+    combinedTransactionsHash() {
+        return this.merkleTree.getRoot()
+    }
+```
 
 > 将截图上传至网盘，放入链接即可
 
-![](链接)
+[![lesson5.png](https://i.postimg.cc/hPLNYyTQ/lesson5.png)](https://postimg.cc/w7BWykW9)
 
 
 ### 主观与讨论题内容
@@ -242,10 +481,83 @@ https://github.com/CUITBlockchain/blockchain-in-js-workshop-2021/commit/25f3a0d8
 
 
 ### 代码截图
+Transaction中更新了构造函数和加了一个_serCharge函数，设置矿工节点，更新了_calculateHash函数
+```
+import sha256 from 'crypto-js/sha256.js'
+import { min } from 'ramda'
+
+
+class Transaction {
+    constructor(miner, receiverPubKey, num, fee) {
+
+            this.miner = miner
+            this.receiverPubKey = receiverPubKey
+            this.num = num
+            this.fee = fee
+            this._setHash()
+
+
+        }
+        // 更新交易 hash
+    _setHash() {
+            this.hash = this._calculateHash();
+
+        }
+        // 计算手续费的函数
+    _setCharge(minner) {
+        // 添加这个矿工节点
+        this.minner = minner
+            //添加手续费
+
+    }
+
+    // 计算交易 hash 的摘要函数
+    _calculateHash() {
+
+        return sha256(this.receiverPubKey + this.num + this.fee + this.miner).toString()
+
+
+    }
+}
+
+export default Transaction
+```
+UTXOPool中更新了isValidTranscation函数和handleTransaction函数逻辑
+```
+isValidTransaction(tra) {
+
+        return this.utxos[tra.miner].amount > (tra.num + tra.fee)
+
+    }
+
+    // 处理交易的方法
+    handleTransaction(tra) {
+        // 首先构建一个UTXO
+        if (this.isValidTransaction(tra)) {
+            this.addUTXO(new UTXO(tra.receiverPubKey, (tra.num)))
+            this.addUTXO(new UTXO(tra.minner, tra.fee))
+            this.utxos[tra.miner] = { amount: this.utxos[tra.miner].amount - tra.num - tra.fee }
+
+        }
+    }
+```
+    在Block中更新了addTransaction函数逻辑
+```
+    addTransaction(trx) {
+            this.merkleTree.addNode(trx)
+                // 给这笔交易添加矿工
+            trx._setCharge(this.coinbaseBeneficiary)
+
+            this.utxoPool.handleTransaction(trx)
+                
+
+
+        }
+ ```
 
 > 将截图上传至网盘，放入链接即可
 
-![](图片链接放这里)
+[![lesson6.png](https://i.postimg.cc/DwsH97Dg/lesson6.png)](https://postimg.cc/nXF37fnj)
 
 
 ### 主观与讨论题内容
