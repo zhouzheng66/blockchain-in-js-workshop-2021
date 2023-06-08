@@ -456,7 +456,7 @@ Block.js
     combinedTransactionsHash() {
         return this.merkleTree.getRoot()
     }
-    ```
+```
 
 > 将截图上传至网盘，放入链接即可
 
