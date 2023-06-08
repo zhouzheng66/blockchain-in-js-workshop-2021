@@ -289,6 +289,7 @@ class Transaction {
 
 export default Transaction
 ```
+```
 // UTXOpool中的处理交易方法
  handleTransaction(tra) {
         // 首先构建一个UTXO
