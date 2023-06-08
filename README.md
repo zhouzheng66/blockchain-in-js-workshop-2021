@@ -140,7 +140,19 @@ https://github.com/CUITBlockchain/blockchain-in-js-workshop-2021/commit/25f3a0d8
 
 
 ## 第二课代码
-
+// Block.js中更新nonce的函数
+setNonce(nonce) {
+            this.nonce = nonce
+        }
+isValid() {
+       
+        const str = "0".repeat(DIFFICULTY)
+        this._setHash()
+        return this.hash.startsWith(str)
+    }
+     _setHash() {
+        this.hash = sha256(this.nonce + this.height + this.previousHash).toString()
+    }
 
 ### 代码 commint 地址
 
