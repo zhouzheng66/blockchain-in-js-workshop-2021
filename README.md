@@ -566,8 +566,342 @@ isValidTransaction(tra) {
 
 ---
 
-#实践课
+# 实践课
+## merkelTree
+```
+import { createHash } from 'crypto';
+import sha256 from 'crypto-js/sha256.js'
 
+class MerkleTree {
+    // 构造函数，输入一个data 是一个数组
+    constructor(data) {
+            this.leaves = data.map((leafData) => this.hashLeaf(leafData));
+            this.tree = this.buildTree(this.leaves);
+        }
+        // 计算data的Hash的方法
+    hashLeaf(leafData) {
+        return sha256(leafData).toString
+    }
+
+    buildTree(leaves) {
+            if (leaves.length === 1) {
+                return leaves;
+            }
+
+            const parents = [];
+            for (let i = 0; i < leaves.length; i += 2) {
+                const left = leaves[i];
+                const right = i + 1 < leaves.length ? leaves[i + 1] : '';
+                const parent = this.hashNodes(left, right);
+                parents.push(parent);
+            }
+
+            return this.buildTree(parents);
+        }
+        // 计算左右两个叶子节点的hash值的方法
+    hashNodes(left, right) {
+            return createHash('sha256').update(left + right).digest('hex');
+        }
+        // 返回默克尔树的根
+    getRoot() {
+        return this.tree[0];
+    }
+
+    getProof(index) {
+        const proof = [];
+        let idx = index;
+
+        for (let i = 0; i < this.tree.length - 1; i++) {
+            const siblingIdx = idx % 2 === 0 ? idx + 1 : idx - 1;
+            const sibling = this.tree[siblingIdx];
+            proof.push(sibling);
+
+            idx = Math.floor(idx / 2);
+        }
+
+        return proof;
+    }
+
+    verify(root, data, proof) {
+        let hash = this.hashLeaf(data);
+
+        for (const sibling of proof) {
+            const left = sibling < hash ? sibling : hash;
+            const right = sibling < hash ? hash : sibling;
+            hash = this.hashNodes(left, right);
+        }
+
+        return root === hash;
+    }
+
+    addNode(data) {
+        const leaf = this.hashLeaf(data);
+        this.leaves.push(leaf);
+        this.rebuildTree();
+    }
+
+    removeNode(data) {
+        const leaf = this.hashLeaf(data);
+        const index = this.leaves.indexOf(leaf);
+        if (index > -1) {
+            this.leaves.splice(index, 1);
+            this.rebuildTree();
+        }
+    }
+
+    rebuildTree() {
+        this.tree = this.buildTree(this.leaves);
+    }
+}
+
+export default MerkleTree
+//示例用法
+const data = ['a', 'b', 'c', 'd'];
+const merkleTree = new MerkleTree(data);
+const root = merkleTree.getRoot();
+console.log('Merkle Tree Root:', root);
+
+// 添加节点
+merkleTree.addNode('e');
+const newRoot = merkleTree.getRoot();
+console.log('Updated Merkle Tree Root:', newRoot);
+
+// 删除节点
+merkleTree.removeNode('c');
+const finalRoot = merkleTree.getRoot();
+console.log('Final Merkle Tree Root:', finalRoot);
+```
+### 运行截图
+[![image.png](https://i.postimg.cc/Xqghc19d/image.png)](https://postimg.cc/9wrJcp8Q)
+
+## 字典树
+```
+class TrieNode {
+    constructor() {
+        this.children = {};
+        this.isEndOfWord = false;
+    }
+}
+
+class Trie {
+    constructor() {
+        this.root = new TrieNode();
+    }
+
+    insert(word) {
+        let current = this.root;
+
+        for (let i = 0; i < word.length; i++) {
+            const char = word[i];
+            if (!current.children[char]) {
+                current.children[char] = new TrieNode();
+            }
+            current = current.children[char];
+        }
+
+        current.isEndOfWord = true;
+    }
+
+    search(word) {
+        let current = this.root;
+
+        for (let i = 0; i < word.length; i++) {
+            const char = word[i];
+            if (!current.children[char]) {
+                return false;
+            }
+            current = current.children[char];
+        }
+
+        return current.isEndOfWord;
+    }
+
+    startsWith(prefix) {
+        let current = this.root;
+
+        for (let i = 0; i < prefix.length; i++) {
+            const char = prefix[i];
+            if (!current.children[char]) {
+                return false;
+            }
+            current = current.children[char];
+        }
+
+        return true;
+    }
+
+    delete(word) {
+        this.deleteRecursive(this.root, word, 0);
+    }
+
+    deleteRecursive(node, word, index) {
+        if (index === word.length) {
+            if (!node.isEndOfWord) {
+                return false;
+            }
+            node.isEndOfWord = false;
+            return Object.keys(node.children).length === 0;
+        }
+
+        const char = word[index];
+        if (!node.children[char]) {
+            return false;
+        }
+
+        const shouldDeleteCurrentNode = this.deleteRecursive(
+            node.children[char],
+            word,
+            index + 1
+        );
+
+        if (shouldDeleteCurrentNode) {
+            delete node.children[char];
+            return Object.keys(node.children).length === 0;
+        }
+
+        return false;
+    }
+}
+
+// 测试代码
+const trie = new Trie();
+
+trie.insert("apple");
+trie.insert("banana");
+trie.insert("orange");
+
+console.log(trie.search("apple")); // 输出 true
+console.log(trie.search("banana")); // 输出 true
+console.log(trie.search("orange")); // 输出 true
+console.log(trie.search("grape")); // 输出 false
+
+console.log(trie.startsWith("app")); // 输出 true
+console.log(trie.startsWith("ban")); // 输出 true
+console.log(trie.startsWith("ora")); // 输出 true
+console.log(trie.startsWith("gr")); // 输出 false
+
+trie.delete("apple");
+console.log(trie.search("apple")); // 输出 false
+console.log(trie.startsWith("app")); // 输出 false
+```
+### 运行截图
+[![image.png](https://i.postimg.cc/cJmnWQ7T/image.png)](https://postimg.cc/zLyBSHcR)
+## 交易状态树
+```
+import pkg from 'keccak256';
+const { keccak256 } = pkg;
+// MPT节点类
+class MPTNode {
+    constructor() {
+        this.value = null; // 节点值（余额等）
+        this.children = {}; // 子节点映射表
+    }
+}
+
+// MPT树类
+class MPT {
+    constructor() {
+        this.root = new MPTNode(); // 根节点
+    }
+
+    // 添加或更新地址的函数
+    addOrUpdateAddress(address, value) {
+        const key = Buffer.from(address, "hex"); // 将地址转换为Buffer类型的键
+        this._addOrUpdateKey(this.root, key, value, 0);
+    }
+
+    // 内部递归函数：添加或更新键值对
+    _addOrUpdateKey(node, key, value, depth) {
+        if (depth === key.length) {
+            // 到达键的末尾，设置节点值
+            node.value = value;
+            return;
+        }
+
+        const nibble = key[depth] >> 4; // 获取当前字节的高4位（nibble）
+        const remainingNibble = key[depth] & 0x0f; // 获取当前字节的低4位（nibble）
+
+        if (!node.children[nibble]) {
+            node.children[nibble] = new MPTNode();
+        }
+
+        // 递归处理子节点
+        this._addOrUpdateKey(
+            node.children[nibble],
+            key,
+            value,
+            depth + 1
+        );
+
+        // 如果子节点已经设置值，则删除子节点
+        if (Object.keys(node.children[nibble].children).length === 0 && node.children[nibble].value === null) {
+            delete node.children[nibble];
+        }
+
+        // 更新哈希值
+        this._updateHash(node, remainingNibble);
+    }
+
+    // 更新节点的哈希值
+    _updateHash(node, remainingNibble) {
+        const childrenHashes = Object.keys(node.children)
+            .sort()
+            .map(key => {
+                const childNode = node.children[key];
+                this._updateHash(childNode, null); // 递归更新子节点的哈希值
+                return keccak256(childNode.hash + key).toString("hex");
+            });
+
+        const valueHash = node.value ? keccak256(node.value).toString("hex") : "";
+
+        if (childrenHashes.length > 0) {
+            node.hash = keccak256(childrenHashes.join("") + valueHash + remainingNibble).toString("hex");
+        } else {
+            node.hash = valueHash;
+        }
+    }
+
+    // 验证地址和余额信息是否匹配
+    verifyAddress(address, value) {
+        const key = Buffer.from(address, "hex");
+        return this._verifyKey(this.root, key, value, 0);
+    }
+
+    // 内部递归函数：验证键值对
+    _verifyKey(node, key, value, depth) {
+        if (depth === key.length) {
+            return node.value === value;
+        }
+
+        const nibble = key[depth] >> 4; // 获取当前字节的高4位（nibble）
+        const remainingNibble = key[depth] & 0x0f; // 获取当前字节的低4位（nibble）
+
+        if (!node.children[nibble]) {
+            return false;
+        }
+
+        return this._verifyKey(
+            node.children[nibble],
+            key,
+            value,
+            depth + 1
+        );
+    }
+}
+
+// 示例用法
+const mpt = new MPT();
+
+// 添加地址和余额信息
+mpt.addOrUpdateAddress("0x0123456789abcdef", "100");
+mpt.addOrUpdateAddress("0xabcdef0123456789", "200");
+
+// 验证地址和余额信息
+console.log(mpt.verifyAddress("0x0123456789abcdef", "100")); // 输出: true
+console.log(mpt.verifyAddress("0x0123456789abcdef", "200")); // 输出: false
+```
+### 运行截图
+[![image.png](https://i.postimg.cc/wTy4BBGD/image.png)](https://postimg.cc/hfn1yKgG)
 
 
 ## 结课报告
