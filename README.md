@@ -540,7 +540,7 @@ isValidTransaction(tra) {
 
         }
     }
-    ```
+```
     在Block中更新了addTransaction函数逻辑
 ```
     addTransaction(trx) {
