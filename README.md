@@ -140,6 +140,7 @@ https://github.com/CUITBlockchain/blockchain-in-js-workshop-2021/commit/25f3a0d8
 
 
 ## 第二课代码
+```
 // Block.js中更新nonce的函数
 setNonce(nonce) {
             this.nonce = nonce
@@ -153,6 +154,7 @@ isValid() {
      _setHash() {
         this.hash = sha256(this.nonce + this.height + this.previousHash).toString()
     }
+```
 
 ### 代码 commint 地址
 
@@ -162,8 +164,9 @@ https://github.com/CUITBlockchain/blockchain-in-js-workshop-2021/commit/25f3a0d8
 ### 代码截图
 
 > 将截图上传至网盘，放入链接即可
+[![lesson2.png](https://i.postimg.cc/zXRNvGnK/lesson2.png)](https://postimg.cc/BXskws7n)
 
-![](链接)
+![https://postimg.cc/BXskws7n](链接)
 
 
 ### 主观与讨论题内容
@@ -182,7 +185,61 @@ https://github.com/CUITBlockchain/blockchain-in-js-workshop-2021/commit/25f3a0d8
 
 
 ### 代码截图
+```
+// 给每个Block 添加UTXO属性和coinbaseBeneficiary属性
+ constructor(blockchain, previousHash, index, hash, miner) {
+        this.blockchain = blockchain;
+        this.previousHash = previousHash
+        this.height = index
+        this.hash = hash
+            // 矿工
+        this.coinbaseBeneficiary = miner
+            //创建交易池
+        this.utxoPool = new UTXOPool({})
+    }
+```
+``` 
+export default class UTXO {
+    constructor(pubKey, amount) {
+        this.pubKey = pubKey
+        this.amount = amount
+    }
+}
+```
+```
+import UTXO from './UTXO.js'
 
+class UTXOPool {
+    constructor(utxos = {}) {
+
+        this.utxos = utxos
+
+
+    }
+
+    // 添加交易函数
+    /**
+     * 将交易的信息更新至 UTXOPool 中
+     */
+    addUTXO(utxo) {
+        // 将新的交易添加进UTXO池中并更新余额
+
+        if (this.utxos[utxo.pubKey] != null) {
+            this.utxos[utxo.pubKey] = { amount: this.utxos[utxo.pubKey].amount + utxo.amount };
+        } else {
+            this.utxos[utxo.pubKey] = { amount: utxo.amount };
+        }
+    }
+
+    // 将当前 UXTO 的副本克隆
+    clone() {
+        return this.utxos
+    }
+}
+
+export default UTXOPool
+```
+[![image.png](https://i.postimg.cc/yNZFx9Lc/image.png)](https://postimg.cc/sB3B0Bdg)
 > 将截图上传至网盘，放入链接即可
 
 ![](链接)
