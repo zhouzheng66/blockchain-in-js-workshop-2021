@@ -1,36 +1,69 @@
 import sha256 from 'crypto-js/sha256.js'
+import { min } from 'ramda';
+
+import UTXOPool from './UTXOPool.js';
+import MerkleTree from './MerkleTree.js';
+import "./Transaction.js"
+import Transaction from './Transaction.js';
 
 export const DIFFICULTY = 2
 
 class Block {
-  // 1. 完成构造函数及其参数
+    // 1. 完成构造函数及其参数
 
-  constructor() {}
+    constructor(blockchain, previousHash, index, hash, miner) {
+        this.blockchain = blockchain;
+        this.previousHash = previousHash
+        this.height = index
+        this.hash = hash
+            // 矿工
+        this.coinbaseBeneficiary = miner
+            //创建交易池
+        this.utxoPool = new UTXOPool({})
+        this.merkleTree = new MerkleTree([new Transaction(0, this.coinbaseBeneficiary, 12.5)])
+            // this.merkleTreeRoot = this.merkleTree.getRoot()
 
-  isValid() {}
+    }
+    isValid() {
+        var str = "0".repeat(DIFFICULTY)
+        this._setHash()
+        return this.hash.startsWith(str)
+    }
 
-  setNonce(nonce) {}
+    setNonce(nonce) {
+            this.nonce = nonce
+        }
+        /**
+         * 
+         * @returns 该区块的前一个区块
+         */
+    getPreviousBlock() {
+        if (this.height == 1) {
+            return this.blockchain.genesis
+        }
+        return this.blockchain.blocks[this.previousHash]
+    }
+    _setHash() {
+        this.hash = sha256(this.nonce + this.previousHash + this.height + this.blockchain + this.coinbaseBeneficiary).toString()
+    }
 
-  // 根据交易变化更新区块 hash
-  _setHash() {}
+    addTransaction(trx) {
+            if (this.utxoPool.isValidTransaction(trx)) {
+                this.merkleTree.addNode(trx)
+                    // 给这笔交易添加矿工
+                trx._setCharge(this.coinbaseBeneficiary)
 
-  // 汇总计算交易的 Hash 值
-  /**
-   * 默克尔树实现
-   */
-  combinedTransactionsHash() {}
+                this.utxoPool.handleTransaction(trx)
+                    // 添加手续费函数
+            }
 
-  // 添加交易到区块
-  /**
-   *
-   * 需包含 UTXOPool 的更新与 hash 的更新
-   */
-  addTransaction() {}
+        }
+        // 获取交易hash combinedTransactionsHash
+    combinedTransactionsHash() {
+        return this.merkleTree.getRoot()
+    }
 
-  // 添加签名校验逻辑
-  isValidTransaction(transaction) {
-    
-  }
+
 }
 
 export default Block
